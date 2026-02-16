@@ -3,346 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Dashboard 2026</title>
-    
-    <!-- นำเข้า Tailwind CSS สำหรับการตกแต่ง -->
+    <title>Financial Dashboard 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- นำเข้า React และ ReactDOM แบบเจาะจงเวอร์ชัน -->
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-is@18.2.0/umd/react-is.production.min.js"></script>
-    
-    <!-- นำเข้า Dependencies ที่จำเป็นสำหรับ Recharts -->
-    <script src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/resize-observer-polyfill@1.5.1/dist/ResizeObserver.global.min.js"></script>
-
-    <!-- นำเข้า Recharts สำหรับวาดกราฟ -->
-    <script src="https://cdn.jsdelivr.net/npm/recharts@2.1.12/umd/Recharts.min.js"></script>
-    
-    <!-- นำเข้า Babel สำหรับแปลงโค้ด JSX -->
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.1/babel.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 1.5rem; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans">
-    <div id="root"></div>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">Financial Dashboard 2026</h1>
+                <p class="text-slate-500">ระบบรายงานสรุปผลกำไรและค่าใช้จ่ายรายเดือน (Embedded Data)</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-blue-200">
+                    📂 อัปโหลดไฟล์ใหม่ (CSV)
+                    <input type="file" id="csvUpload" class="hidden" accept=".csv">
+                </label>
+            </div>
+        </div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, ComposedChart } = window.Recharts;
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="card border-l-4 border-blue-500">
+                <p class="text-sm text-slate-500 uppercase font-bold">Total Income</p>
+                <h2 id="sumIncome" class="text-2xl font-bold text-slate-800">฿0.00</h2>
+            </div>
+            <div class="card border-l-4 border-orange-400">
+                <p class="text-sm text-slate-500 uppercase font-bold">Total Expenses</p>
+                <h2 id="sumExpense" class="text-2xl font-bold text-slate-800">฿0.00</h2>
+            </div>
+            <div class="card border-l-4 border-emerald-500">
+                <p class="text-sm text-slate-500 uppercase font-bold">Net Profit/Loss</p>
+                <h2 id="sumNet" class="text-2xl font-bold text-slate-800">฿0.00</h2>
+            </div>
+            <div class="card border-l-4 border-indigo-500">
+                <p class="text-sm text-slate-500 uppercase font-bold">Accumulated Profit</p>
+                <h2 id="sumAcc" class="text-2xl font-bold text-slate-800">฿0.00</h2>
+            </div>
+        </div>
 
-        // --- ไอคอน ---
-        const UploadIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>;
-        const DollarSignIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
-        const TrendingDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>;
-        const PieChartIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>;
-        const ClockIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
-        const AlertCircleIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>;
-        const FileTextIcon = ({ className }) => <svg className={className} xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>;
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 1. Main Performance Chart -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 text-slate-700">รายรับเทียบกับรายจ่ายรวม (Income vs Total Expenses)</h3>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
 
-        // ข้อมูลตัวอย่าง
-        const defaultCSVText = `Overall,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
-Total income,7865308.67,0,0,0,0,0,0,0,0,0,0,0
-Cost of goods sold,2645359.98,0,0,0,0,0,0,0,0,0,0,0
-Expense,5220432,0,0,0,0,0,0,0,0,0,0,0
-Net profit & loss,-483.31,0,0,0,0,0,0,0,0,0,0,0
-Accumulated profit,-483.31,0,0,0,0,0,0,0,0,0,0,0
+            <!-- 2. Profit Trend Chart -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 text-slate-700">แนวโน้มกำไร (Profit Trends)</h3>
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 3. Expense Breakdown Chart -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 text-slate-700">สัดส่วนค่าใช้จ่าย (Expense Breakdown)</h3>
+                <div class="chart-container">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 4. Late Report Chart -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4 text-slate-700">สถิติการมาสาย (Late Report Statistics)</h3>
+                <div class="chart-container">
+                    <canvas id="lateChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-slate-400 text-sm">
+            Dashboard นี้ฝังข้อมูลจาก Monthly Database.csv เรียบร้อยแล้ว | อัปเดตล่าสุด: กุมภาพันธ์ 2026
+        </div>
+    </div>
+
+    <script>
+        // --- ฝังข้อมูล CSV ไว้ที่นี่ ---
+        const embeddedCsvData = `Overall,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
+Total income,7865308.67,,,,,,,,,,,
+Cost of goods sold,2645359.98,,,,,,,,,,,
+Expense,5220432,,,,,,,,,,,
+Net profit & loss,-483.31,,,,,,,,,,,
+Accumulated profit,-483.31,,,,,,,,,,,
 ,,,,,,,,,,,,
 Expense Breakdown,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
-Overtime - Employees,59534.58,0,0,0,0,0,0,0,0,0,0,0
-Telephone Expenses,24509.5,0,0,0,0,0,0,0,0,0,0,0
-Electricity Expenses,18438.75,0,0,0,0,0,0,0,0,0,0,0
-Water Supplies,489.22,0,0,0,0,0,0,0,0,0,0,0
-Stationary Expenses,735.08,0,0,0,0,0,0,0,0,0,0,0
-Seminar & Training,90000,0,0,0,0,0,0,0,0,0,0,0
-Domain & Hosting Expense,68052.08,0,0,0,0,0,0,0,0,0,0,0
-Copy expenses,4108.6,0,0,0,0,0,0,0,0,0,0,0
-Fuel Expenses,47832.51,0,0,0,0,0,0,0,0,0,0,0
-Travel & Transportation-Local,44799.62,0,0,0,0,0,0,0,0,0,0,0
-Loss on Exchange Rate,150582.23,0,0,0,0,0,0,0,0,0,0,0
+Overtime - Employees,59534.58,,,,,,,,,,,
+Telephone Expenses,24509.5,,,,,,,,,,,
+Electricity Expenses,18438.75,,,,,,,,,,,
+Water Supplies,489.22,,,,,,,,,,,
+Stationary Expenses,735.08,,,,,,,,,,,
+Seminar & Training,90000,,,,,,,,,,,
+Domain & Hosting Expense,68052.08,,,,,,,,,,,
+Copy expenses,4108.6,,,,,,,,,,,
+Fuel Expenses,47832.51,,,,,,,,,,,
+Travel & Transportation-Local,44799.62,,,,,,,,,,,
+Loss on Exchange Rate,150582.23,,,,,,,,,,,
 ,,,,,,,,,,,,
 Late report,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
-Times,24,0,0,0,0,0,0,0,0,0,0,0
-Hours,0.46,0,0,0,0,0,0,0,0,0,0,0`;
+Times,24,,,,,,,,,,,
+Hours,0.46,,,,,,,,,,,`;
 
-        const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#f4a460', '#d0ed57', '#a4de6c', '#d0ed57'];
+        let charts = {};
 
-        const App = () => {
-            const [data, setData] = useState(null);
-            const [selectedMonth, setSelectedMonth] = useState('All');
-            const [error, setError] = useState('');
+        // ทำงานทันทีเมื่อโหลดหน้าเว็บ
+        window.onload = function() {
+            loadInitialData();
+        };
 
-            // ฟังก์ชันอ่านไฟล์ CSV
-            const parseCSV = (csvText) => {
-                try {
-                    const rows = csvText.split(/\r?\n/).map(row => row.split(','));
-                    
-                    const getRowData = (rowName) => {
-                        const row = rows.find(r => r[0] && r[0].trim() === rowName);
-                        if (!row) return Array(12).fill(0);
-                        return row.slice(1, 13).map(val => parseFloat(val) || 0);
-                    };
+        function loadInitialData() {
+            Papa.parse(embeddedCsvData, {
+                header: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processData(results.data);
+                }
+            });
+        }
 
-                    const cogsData = getRowData('Cost of goods sold');
-                    const expenseData = getRowData('Expense');
-                    const totalCombinedExpense = cogsData.map((val, index) => val + expenseData[index]);
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(val);
+        }
 
-                    const parsedData = {
-                        overall: {
-                            income: getRowData('Total income'),
-                            expense: totalCombinedExpense, 
-                            netProfit: getRowData('Net profit & loss'),
-                        },
-                        expenses: {},
-                        late: {
-                            times: getRowData('Times'),
-                            hours: getRowData('Hours')
-                        }
-                    };
+        function formatCompactNumber(number) {
+            if (Math.abs(number) >= 1000000) {
+                return (number / 1000000).toFixed(1) + 'M';
+            }
+            if (Math.abs(number) >= 1000) {
+                return (number / 1000).toFixed(1) + 'k';
+            }
+            return number.toString();
+        }
 
-                    const expenseStart = rows.findIndex(r => r[0] && r[0].trim() === 'Expense Breakdown');
-                    const lateStart = rows.findIndex(r => r[0] && r[0].trim() === 'Late report');
+        document.getElementById('csvUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-                    if (expenseStart !== -1) {
-                        const endIdx = lateStart !== -1 ? lateStart : rows.length;
-                        for (let i = expenseStart + 1; i < endIdx; i++) {
-                            const row = rows[i];
-                            if (row && row[0] && row[0].trim() !== '' && row[0].trim() !== 'Overall' && row[0].trim() !== 'Expense Breakdown') {
-                                const expenseName = row[0].trim();
-                                const values = row.slice(1, 13).map(val => parseFloat(val) || 0);
-                                if (values.some(v => v > 0)) {
-                                    parsedData.expenses[expenseName] = values;
+            Papa.parse(file, {
+                header: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processData(results.data);
+                }
+            });
+        });
+
+        function processData(data) {
+            const monthIdx = 1; // อ้างอิงคอลัมน์ Jan
+
+            const findValue = (label) => {
+                const row = data.find(r => r[0] && r[0].trim() === label);
+                if (!row || !row[monthIdx]) return 0;
+                return parseFloat(row[monthIdx].toString().replace(/,/g, '')) || 0;
+            };
+
+            const income = findValue('Total income');
+            const cogs = findValue('Cost of goods sold');
+            const expense = findValue('Expense');
+            const netProfit = findValue('Net profit & loss');
+            const accProfit = findValue('Accumulated profit');
+
+            let lateTimes = 0;
+            let lateHours = 0;
+            let lateSectionFound = false;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i][0] && data[i][0].trim() === 'Late report') { lateSectionFound = true; continue; }
+                if (lateSectionFound && data[i][0]) {
+                    if (data[i][0].trim() === 'Times') lateTimes = parseFloat(data[i][monthIdx]) || 0;
+                    if (data[i][0].trim() === 'Hours') lateHours = parseFloat(data[i][monthIdx]) || 0;
+                }
+            }
+
+            // อัปเดตตัวเลขใน Card
+            document.getElementById('sumIncome').innerText = formatCurrency(income);
+            document.getElementById('sumExpense').innerText = formatCurrency(cogs + expense);
+            document.getElementById('sumNet').innerText = formatCurrency(netProfit);
+            document.getElementById('sumAcc').innerText = formatCurrency(accProfit);
+
+            // สีตัวเลขกำไร/ขาดทุน
+            const netEl = document.getElementById('sumNet');
+            if (netProfit < 0) netEl.classList.replace('text-slate-800', 'text-red-600');
+            else netEl.classList.replace('text-slate-800', 'text-emerald-600');
+
+            // ดึงข้อมูล Expense Breakdown
+            let expenseLabels = [];
+            let expenseValues = [];
+            let inBreakdown = false;
+
+            for (let i = 0; i < data.length; i++) {
+                if (data[i][0] === 'Expense Breakdown') { inBreakdown = true; continue; }
+                if (inBreakdown) {
+                    if (!data[i][0] || data[i][0].trim() === '' || data[i][0] === 'Late report') break;
+                    expenseLabels.push(data[i][0]);
+                    expenseValues.push(parseFloat(data[i][monthIdx].toString().replace(/,/g, '')) || 0);
+                }
+            }
+
+            updateCharts(income, cogs, expense, netProfit, accProfit, expenseLabels, expenseValues, lateTimes, lateHours);
+        }
+
+        function updateCharts(income, cogs, expense, netProfit, accProfit, expLabels, expValues, lateTimes, lateHours) {
+            Object.values(charts).forEach(c => c && c.destroy());
+
+            // 1. Main Chart
+            charts.main = new Chart(document.getElementById('mainChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['มกราคม'],
+                    datasets: [
+                        { label: 'รายได้รวม', data: [income], backgroundColor: '#3b82f6', borderRadius: 6 },
+                        { label: 'รายจ่ายรวม', data: [cogs + expense], backgroundColor: '#f97316', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // 2. Profit Chart
+            charts.profit = new Chart(document.getElementById('profitChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan'],
+                    datasets: [
+                        { label: 'กำไรสุทธิ', data: [netProfit], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, fill: false },
+                        { label: 'กำไรสะสม', data: [accProfit], borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // 3. Expense Breakdown
+            charts.expense = new Chart(document.getElementById('expenseChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: expLabels,
+                    datasets: [{
+                        data: expValues,
+                        backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4']
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 },
+                                generateLabels: (chart) => {
+                                    const data = chart.data;
+                                    return data.labels.map((label, i) => ({
+                                        text: `${label} (${formatCompactNumber(data.datasets[0].data[i])})`,
+                                        fillStyle: data.datasets[0].backgroundColor[i],
+                                        index: i
+                                    }));
                                 }
                             }
                         }
                     }
-                    return parsedData;
-                } catch (err) {
-                    console.error(err);
-                    setError('เกิดข้อผิดพลาดในการอ่านไฟล์ กรุณาตรวจสอบรูปแบบไฟล์ CSV');
-                    return null;
                 }
-            };
+            });
 
-            useEffect(() => {
-                setData(parseCSV(defaultCSVText));
-            }, []);
-
-            const handleFileUpload = (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const text = e.target.result;
-                        const parsed = parseCSV(text);
-                        if (parsed) {
-                            setData(parsed);
-                            setError('');
-                        }
-                    };
-                    reader.readAsText(file);
+            // 4. Late Report Chart
+            charts.late = new Chart(document.getElementById('lateChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Jan'],
+                    datasets: [
+                        { label: 'จำนวนครั้ง (ครั้ง)', data: [lateTimes], backgroundColor: '#f59e0b', yAxisID: 'y' },
+                        { label: 'จำนวนชั่วโมง (ชม.)', data: [lateHours], backgroundColor: '#6366f1', yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { position: 'left', title: { display: true, text: 'ครั้ง' } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'ชั่วโมง' } }
+                    }
                 }
-            };
-
-            const getValue = (array) => {
-                if (!array) return 0;
-                if (selectedMonth === 'All') {
-                    return array.reduce((acc, curr) => acc + curr, 0);
-                } else {
-                    const monthIdx = MONTHS.indexOf(selectedMonth);
-                    return array[monthIdx] || 0;
-                }
-            };
-
-            const formatCurrency = (value) => {
-                return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(value);
-            };
-
-            if (!data) return <div className="p-8 text-center text-gray-500">กำลังโหลดระบบ Dashboard...</div>;
-
-            const financialChartData = MONTHS.map((month, idx) => ({
-                name: month,
-                Income: data.overall.income[idx],
-                Expense: data.overall.expense[idx],
-                Profit: data.overall.netProfit[idx],
-            }));
-
-            const expensePieData = Object.keys(data.expenses).map((key) => ({
-                name: key,
-                value: getValue(data.expenses[key])
-            })).filter(item => item.value > 0).sort((a, b) => b.value - a.value);
-
-            const lateChartData = MONTHS.map((month, idx) => ({
-                name: month,
-                Times: data.late.times[idx],
-                Hours: data.late.hours[idx],
-            }));
-
-            const totalIncome = getValue(data.overall.income);
-            const totalExpense = getValue(data.overall.expense);
-            const netProfit = getValue(data.overall.netProfit);
-            const totalLateTimes = getValue(data.late.times);
-            const totalLateHours = getValue(data.late.hours);
-
-            return (
-                <div className="min-h-screen p-4 md:p-8">
-                    {/* Header */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                        <div>
-                            <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">Executive Dashboard 2026</h1>
-                            <p className="text-xl text-gray-500 mt-2">รายงานสรุปผลประกอบการและสถิติพนักงาน</p>
-                        </div>
-                        
-                        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                            <select 
-                                className="px-6 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white"
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                            >
-                                <option value="All">สรุปทั้งปี (All Year)</option>
-                                {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-
-                            <label className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg shadow-sm cursor-pointer hover:bg-blue-700 transition-colors text-lg">
-                                <UploadIcon className="mr-2" />
-                                <span className="font-medium">อัปโหลดไฟล์ CSV ใหม่</span>
-                                <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                            </label>
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-md flex items-center">
-                            <AlertCircleIcon className="text-red-500 mr-3" />
-                            <p className="text-red-700">{error}</p>
-                        </div>
-                    )}
-
-                    {/* KPI Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 flex items-center">
-                            <div className="p-4 bg-green-100 text-green-600 rounded-lg mr-5"><DollarSignIcon /></div>
-                            <div>
-                                <p className="text-lg text-gray-500 font-medium">รายได้รวม (Income)</p>
-                                <p className="text-3xl font-bold text-gray-800 mt-1">{formatCurrency(totalIncome)}</p>
-                            </div>
-                        </div>
-                        
-                        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 flex items-center">
-                            <div className="p-4 bg-red-100 text-red-600 rounded-lg mr-5"><TrendingDownIcon /></div>
-                            <div>
-                                <p className="text-lg text-gray-500 font-medium">ค่าใช้จ่ายรวม (Expense)</p>
-                                <p className="text-3xl font-bold text-gray-800 mt-1">{formatCurrency(totalExpense)}</p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 flex items-center">
-                            <div className={`p-4 rounded-lg mr-5 ${netProfit >= 0 ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                                <PieChartIcon />
-                            </div>
-                            <div>
-                                <p className="text-lg text-gray-500 font-medium">กำไรสุทธิ (Net Profit)</p>
-                                <p className={`text-3xl font-bold mt-1 ${netProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                                    {formatCurrency(netProfit)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 flex items-center">
-                            <div className="p-4 bg-purple-100 text-purple-600 rounded-lg mr-5"><ClockIcon /></div>
-                            <div>
-                                <p className="text-lg text-gray-500 font-medium">สถิติมาสาย (Late)</p>
-                                <p className="text-3xl font-bold text-gray-800 mt-1">{totalLateTimes} ครั้ง</p>
-                                <p className="text-sm text-gray-400 mt-1">รวม {totalLateHours.toFixed(2)} ชั่วโมง</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Charts */}
-                    <div className="grid grid-cols-1 gap-10">
-                        {/* Financial Chart */}
-                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-8 flex items-center">
-                                <FileTextIcon className="mr-3 text-gray-400" /> ภาพรวมการเงินรายเดือน
-                            </h2>
-                            <div className="h-[500px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <ComposedChart data={financialChartData} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                        {/* เพิ่มขนาดตัวอักษรเดือน (แกน X) เป็น 18 และตัวหนา */}
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 18, fontWeight: 'bold' }} />
-                                        <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `฿${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 16 }} />
-                                        <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ fontSize: '16px' }} />
-                                        <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '16px' }} />
-                                        <Bar dataKey="Income" fill="#3B82F6" radius={[4, 4, 0, 0]} name="รายได้ (Income)" />
-                                        <Bar dataKey="Expense" fill="#EF4444" radius={[4, 4, 0, 0]} name="ค่าใช้จ่าย (Expense)" />
-                                        <Line type="monotone" dataKey="Profit" stroke="#10B981" strokeWidth={4} name="กำไรสุทธิ (Net Profit)" dot={{ r: 5 }} />
-                                    </ComposedChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Expense Breakdown Pie Chart */}
-                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-8">
-                                สัดส่วนค่าใช้จ่าย {selectedMonth !== 'All' ? `(เดือน ${selectedMonth})` : '(รวมทั้งปี)'}
-                            </h2>
-                            {expensePieData.length > 0 ? (
-                                <div className="h-[500px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie 
-                                                data={expensePieData} 
-                                                cx="40%" // ขยับไปทางซ้ายให้มากขึ้นเพื่อเปิดพื้นที่ให้ Label ด้านขวา
-                                                cy="50%" 
-                                                innerRadius={80} 
-                                                outerRadius={180} 
-                                                paddingAngle={2} 
-                                                dataKey="value"
-                                            >
-                                                {expensePieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                            </Pie>
-                                            <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ fontSize: '16px' }} />
-                                            {/* เพิ่มขนาดตัวอักษร Label เป็น 18px และขยายพื้นที่ Legend เป็น 60% เพื่อกันคำตกบรรทัด */}
-                                            <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '20px', width: '60%', lineHeight: '28px' }}/>
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            ) : (
-                                <div className="h-[500px] flex items-center justify-center text-gray-400 text-xl">ไม่มีข้อมูลค่าใช้จ่าย</div>
-                            )}
-                        </div>
-
-                        {/* Late Statistics Chart */}
-                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-8">สถิติการมาสายของพนักงาน (Late Statistics)</h2>
-                            <div className="h-[450px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={lateChartData} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                        {/* เพิ่มขนาดตัวอักษรเดือน (แกน X) เป็น 18 และตัวหนา */}
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 18, fontWeight: 'bold' }} />
-                                        <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                                        <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                                        <Tooltip contentStyle={{ fontSize: '16px' }} />
-                                        <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '16px' }} />
-                                        <Bar yAxisId="left" dataKey="Times" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="จำนวนครั้งที่มาสาย" />
-                                        <Bar yAxisId="right" dataKey="Hours" fill="#F59E0B" radius={[4, 4, 0, 0]} name="ชั่วโมงที่มาสายรวม" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+            });
+        }
     </script>
 </body>
 </html>
