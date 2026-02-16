@@ -52,7 +52,6 @@
 
         <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- 1. Main Performance Chart -->
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">รายรับเทียบกับรายจ่ายรวม (Income vs Total Expenses)</h3>
                 <div class="chart-container">
@@ -60,7 +59,6 @@
                 </div>
             </div>
 
-            <!-- 2. Profit Trend Chart -->
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">แนวโน้มกำไร (Profit Trends)</h3>
                 <div class="chart-container">
@@ -68,15 +66,14 @@
                 </div>
             </div>
 
-            <!-- 3. Expense Breakdown Chart -->
+            <!-- กราฟที่ปรับปรุง: เรียงลำดับจากมากไปน้อย -->
             <div class="card">
-                <h3 class="text-lg font-bold mb-4 text-slate-700">สัดส่วนค่าใช้จ่าย (Expense Breakdown)</h3>
+                <h3 class="text-lg font-bold mb-4 text-slate-700">สัดส่วนค่าใช้จ่าย (Expense Breakdown - Sorted)</h3>
                 <div class="chart-container">
                     <canvas id="expenseChart"></canvas>
                 </div>
             </div>
 
-            <!-- 4. Late Report Chart -->
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">สถิติการมาสาย (Late Report Statistics)</h3>
                 <div class="chart-container">
@@ -91,7 +88,6 @@
     </div>
 
     <script>
-        // --- ฝังข้อมูล CSV ไว้ที่นี่ ---
         const embeddedCsvData = `Overall,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
 Total income,7865308.67,,,,,,,,,,,
 Cost of goods sold,2645359.98,,,,,,,,,,,
@@ -118,7 +114,6 @@ Hours,0.46,,,,,,,,,,,`;
 
         let charts = {};
 
-        // ทำงานทันทีเมื่อโหลดหน้าเว็บ
         window.onload = function() {
             loadInitialData();
         };
@@ -138,19 +133,14 @@ Hours,0.46,,,,,,,,,,,`;
         }
 
         function formatCompactNumber(number) {
-            if (Math.abs(number) >= 1000000) {
-                return (number / 1000000).toFixed(1) + 'M';
-            }
-            if (Math.abs(number) >= 1000) {
-                return (number / 1000).toFixed(1) + 'k';
-            }
-            return number.toString();
+            if (Math.abs(number) >= 1000000) return (number / 1000000).toFixed(1) + 'M';
+            if (Math.abs(number) >= 1000) return (number / 1000).toFixed(1) + 'k';
+            return number.toFixed(0);
         }
 
         document.getElementById('csvUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             Papa.parse(file, {
                 header: false,
                 skipEmptyLines: true,
@@ -161,7 +151,7 @@ Hours,0.46,,,,,,,,,,,`;
         });
 
         function processData(data) {
-            const monthIdx = 1; // อ้างอิงคอลัมน์ Jan
+            const monthIdx = 1;
 
             const findValue = (label) => {
                 const row = data.find(r => r[0] && r[0].trim() === label);
@@ -175,9 +165,7 @@ Hours,0.46,,,,,,,,,,,`;
             const netProfit = findValue('Net profit & loss');
             const accProfit = findValue('Accumulated profit');
 
-            let lateTimes = 0;
-            let lateHours = 0;
-            let lateSectionFound = false;
+            let lateTimes = 0, lateHours = 0, lateSectionFound = false;
             for (let i = 0; i < data.length; i++) {
                 if (data[i][0] && data[i][0].trim() === 'Late report') { lateSectionFound = true; continue; }
                 if (lateSectionFound && data[i][0]) {
@@ -186,38 +174,46 @@ Hours,0.46,,,,,,,,,,,`;
                 }
             }
 
-            // อัปเดตตัวเลขใน Card
             document.getElementById('sumIncome').innerText = formatCurrency(income);
             document.getElementById('sumExpense').innerText = formatCurrency(cogs + expense);
             document.getElementById('sumNet').innerText = formatCurrency(netProfit);
             document.getElementById('sumAcc').innerText = formatCurrency(accProfit);
 
-            // สีตัวเลขกำไร/ขาดทุน
             const netEl = document.getElementById('sumNet');
-            if (netProfit < 0) netEl.classList.replace('text-slate-800', 'text-red-600');
-            else netEl.classList.replace('text-slate-800', 'text-emerald-600');
+            if (netProfit < 0) {
+                netEl.classList.remove('text-emerald-600', 'text-slate-800');
+                netEl.classList.add('text-red-600');
+            } else {
+                netEl.classList.remove('text-red-600', 'text-slate-800');
+                netEl.classList.add('text-emerald-600');
+            }
 
-            // ดึงข้อมูล Expense Breakdown
-            let expenseLabels = [];
-            let expenseValues = [];
+            // --- ส่วนการเรียงลำดับค่าใช้จ่าย ---
+            let expenseItems = [];
             let inBreakdown = false;
-
             for (let i = 0; i < data.length; i++) {
                 if (data[i][0] === 'Expense Breakdown') { inBreakdown = true; continue; }
                 if (inBreakdown) {
                     if (!data[i][0] || data[i][0].trim() === '' || data[i][0] === 'Late report') break;
-                    expenseLabels.push(data[i][0]);
-                    expenseValues.push(parseFloat(data[i][monthIdx].toString().replace(/,/g, '')) || 0);
+                    const val = parseFloat(data[i][monthIdx].toString().replace(/,/g, '')) || 0;
+                    if (val > 0) { // แสดงเฉพาะที่มีค่ามากกว่า 0
+                        expenseItems.push({ label: data[i][0], value: val });
+                    }
                 }
             }
 
-            updateCharts(income, cogs, expense, netProfit, accProfit, expenseLabels, expenseValues, lateTimes, lateHours);
+            // เรียงลำดับจากมากไปน้อย
+            expenseItems.sort((a, b) => b.value - a.value);
+
+            const expLabels = expenseItems.map(item => item.label);
+            const expValues = expenseItems.map(item => item.value);
+
+            updateCharts(income, cogs, expense, netProfit, accProfit, expLabels, expValues, lateTimes, lateHours);
         }
 
         function updateCharts(income, cogs, expense, netProfit, accProfit, expLabels, expValues, lateTimes, lateHours) {
             Object.values(charts).forEach(c => c && c.destroy());
 
-            // 1. Main Chart
             charts.main = new Chart(document.getElementById('mainChart'), {
                 type: 'bar',
                 data: {
@@ -227,37 +223,32 @@ Hours,0.46,,,,,,,,,,,`;
                         { label: 'รายจ่ายรวม', data: [cogs + expense], backgroundColor: '#f97316', borderRadius: 6 }
                     ]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: { y: { beginAtZero: true } }
-                }
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // 2. Profit Chart
             charts.profit = new Chart(document.getElementById('profitChart'), {
                 type: 'line',
                 data: {
                     labels: ['Jan'],
                     datasets: [
-                        { label: 'กำไรสุทธิ', data: [netProfit], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, fill: false },
+                        { label: 'กำไรสุทธิ', data: [netProfit], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3 },
                         { label: 'กำไรสะสม', data: [accProfit], borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
                     ]
                 },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // 3. Expense Breakdown
+            // ปรับแต่ง Donut Chart และ Legend
+            const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#475569', '#94a3b8'];
+            
             charts.expense = new Chart(document.getElementById('expenseChart'), {
                 type: 'doughnut',
                 data: {
                     labels: expLabels,
                     datasets: [{
                         data: expValues,
-                        backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4']
+                        backgroundColor: colors.slice(0, expLabels.length),
+                        borderWidth: 2
                     }]
                 },
                 options: {
@@ -267,14 +258,27 @@ Hours,0.46,,,,,,,,,,,`;
                             position: 'right',
                             labels: {
                                 boxWidth: 12,
+                                padding: 15,
                                 font: { size: 11 },
+                                color: '#475569',
                                 generateLabels: (chart) => {
                                     const data = chart.data;
-                                    return data.labels.map((label, i) => ({
-                                        text: `${label} (${formatCompactNumber(data.datasets[0].data[i])})`,
-                                        fillStyle: data.datasets[0].backgroundColor[i],
-                                        index: i
-                                    }));
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+                                            return {
+                                                text: `${label} (${formatCompactNumber(data.datasets[0].data[i])})`,
+                                                fillStyle: style.backgroundColor, // ใช้สีเดียวกับกราฟ
+                                                strokeStyle: style.backgroundColor,
+                                                lineWidth: 0,
+                                                hidden: chart.getDatasetMeta(0).data[i].hidden,
+                                                index: i,
+                                                fontColor: style.backgroundColor // ทำให้สีตัวอักษรตรงกับสีกราฟ
+                                            };
+                                        });
+                                    }
+                                    return [];
                                 }
                             }
                         }
@@ -282,7 +286,6 @@ Hours,0.46,,,,,,,,,,,`;
                 }
             });
 
-            // 4. Late Report Chart
             charts.late = new Chart(document.getElementById('lateChart'), {
                 type: 'bar',
                 data: {
