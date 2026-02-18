@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Dashboard 2026</title>
+    <title>Financial Dashboard 2026 - HITEC Food Equipment</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -20,10 +20,28 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-800">Financial Dashboard 2026</h1>
-                <p class="text-slate-500">ระบบรายงานสรุปผลกำไรและค่าใช้จ่ายรายเดือน (Embedded Data)</p>
+                <p class="text-slate-500">HITEC Food Equipment Co., Ltd. (Updated Analysis)</p>
             </div>
-            <div class="flex items-center gap-2">
-                <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-blue-200">
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                <!-- NEW: Month Filter -->
+                <select id="monthFilter" class="bg-white border border-slate-300 text-slate-700 font-semibold py-2.5 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer h-full">
+                    <option value="1" selected>มกราคม (Jan)</option>
+                    <option value="2">กุมภาพันธ์ (Feb)</option>
+                    <option value="3">มีนาคม (Mar)</option>
+                    <option value="4">เมษายน (Apr)</option>
+                    <option value="5">พฤษภาคม (May)</option>
+                    <option value="6">มิถุนายน (Jun)</option>
+                    <option value="7">กรกฎาคม (Jul)</option>
+                    <option value="8">สิงหาคม (Aug)</option>
+                    <option value="9">กันยายน (Sep)</option>
+                    <option value="10">ตุลาคม (Oct)</option>
+                    <option value="11">พฤศจิกายน (Nov)</option>
+                    <option value="12">ธันวาคม (Dec)</option>
+                    <option value="all">📊 สรุปทั้งปี 2026 (All Year)</option>
+                </select>
+
+                <!-- Upload Button -->
+                <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-blue-200 flex items-center h-full whitespace-nowrap">
                     📂 อัปโหลดไฟล์ใหม่ (CSV)
                     <input type="file" id="csvUpload" class="hidden" accept=".csv">
                 </label>
@@ -33,24 +51,43 @@
         <!-- Summary Cards -->
         <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="card border-l-4 border-blue-500">
-                <p class="text-sm text-slate-500 uppercase font-bold">Total Income</p>
+                <p class="text-sm text-slate-500 uppercase font-bold" id="labelIncome">Total Income</p>
                 <h2 id="sumIncome" class="text-2xl font-bold text-slate-800">฿0.00</h2>
             </div>
             <div class="card border-l-4 border-orange-400">
-                <p class="text-sm text-slate-500 uppercase font-bold">Total Expenses</p>
+                <p class="text-sm text-slate-500 uppercase font-bold" id="labelExpense">Total Expenses</p>
                 <h2 id="sumExpense" class="text-2xl font-bold text-slate-800">฿0.00</h2>
             </div>
             <div class="card border-l-4 border-emerald-500">
-                <p class="text-sm text-slate-500 uppercase font-bold">Net Profit/Loss</p>
+                <p class="text-sm text-slate-500 uppercase font-bold" id="labelNet">Net Profit/Loss</p>
                 <h2 id="sumNet" class="text-2xl font-bold text-slate-800">฿0.00</h2>
             </div>
             <div class="card border-l-4 border-indigo-500">
-                <p class="text-sm text-slate-500 uppercase font-bold">Accumulated Profit</p>
+                <p class="text-sm text-slate-500 uppercase font-bold" id="labelAcc">Accumulated Profit</p>
                 <h2 id="sumAcc" class="text-2xl font-bold text-slate-800">฿0.00</h2>
             </div>
         </div>
 
-        <!-- Charts Grid -->
+        <!-- STATIC SECTION: Historical & Target Charts (Not affected by filter) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- กราฟที่ 1: ประวัติยอดขาย 2003-2025 -->
+            <div class="card col-span-1 lg:col-span-2">
+                <h3 class="text-lg font-bold mb-4 text-slate-700">ประวัติยอดขายรายปี (Annual Sales Revenue 2003-2025)</h3>
+                <div class="chart-container">
+                    <canvas id="historicalChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- กราฟที่ 2: Target vs Actual (Accumulated) -->
+            <div class="card col-span-1 lg:col-span-2">
+                <h3 class="text-lg font-bold mb-4 text-slate-700">เป้าหมาย vs ยอดขายสะสม ปี 2026 (Target: 265M THB)</h3>
+                <div class="chart-container">
+                    <canvas id="targetChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- DYNAMIC SECTION: Charts affected by Filter -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">รายรับเทียบกับรายจ่ายรวม (Income vs Total Expenses)</h3>
@@ -66,7 +103,6 @@
                 </div>
             </div>
 
-            <!-- กราฟที่ปรับปรุง: เรียงลำดับจากมากไปน้อย -->
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">สัดส่วนค่าใช้จ่าย (Expense Breakdown - Sorted)</h3>
                 <div class="chart-container">
@@ -94,7 +130,6 @@ Cost of goods sold,2645359.98,,,,,,,,,,,
 Expense,5220432,,,,,,,,,,,
 Net profit & loss,-483.31,,,,,,,,,,,
 Accumulated profit,-483.31,,,,,,,,,,,
-,,,,,,,,,,,,
 Expense Breakdown,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
 Overtime - Employees,59534.58,,,,,,,,,,,
 Telephone Expenses,24509.5,,,,,,,,,,,
@@ -107,15 +142,21 @@ Copy expenses,4108.6,,,,,,,,,,,
 Fuel Expenses,47832.51,,,,,,,,,,,
 Travel & Transportation-Local,44799.62,,,,,,,,,,,
 Loss on Exchange Rate,150582.23,,,,,,,,,,,
-,,,,,,,,,,,,
 Late report,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
 Times,24,,,,,,,,,,,
 Hours,0.46,,,,,,,,,,,`;
 
         let charts = {};
+        let globalData = []; // Store parsed data globally
+        const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         window.onload = function() {
             loadInitialData();
+            
+            // Add event listener for filter
+            document.getElementById('monthFilter').addEventListener('change', function() {
+                updateDynamicDashboard(this.value);
+            });
         };
 
         function loadInitialData() {
@@ -123,7 +164,316 @@ Hours,0.46,,,,,,,,,,,`;
                 header: false,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    processData(results.data);
+                    globalData = results.data;
+                    initStaticCharts(globalData); // Render static charts once
+                    updateDynamicDashboard('1'); // Render dynamic charts for Jan initially
+                }
+            });
+        }
+
+        document.getElementById('csvUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            Papa.parse(file, {
+                header: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    globalData = results.data;
+                    initStaticCharts(globalData);
+                    updateDynamicDashboard(document.getElementById('monthFilter').value);
+                }
+            });
+        });
+
+        // --- Data Extraction Helpers ---
+        function parseVal(val) {
+            if (!val) return 0;
+            return parseFloat(val.toString().replace(/,/g, '')) || 0;
+        }
+
+        function getRowValue(label, monthIdx) {
+            const row = globalData.find(r => r[0] && r[0].trim() === label);
+            if (!row || !row[monthIdx]) return 0;
+            return parseVal(row[monthIdx]);
+        }
+
+        function getRowArray(label) {
+            const row = globalData.find(r => r[0] && r[0].trim() === label);
+            if (!row) return new Array(12).fill(0);
+            return row.slice(1, 13).map(v => parseVal(v));
+        }
+
+        // --- 1. Static Charts (Never Change with Filter) ---
+        function initStaticCharts(data) {
+            // Destroy existing static charts if any
+            if(charts.history) charts.history.destroy();
+            if(charts.target) charts.target.destroy();
+
+            // A. Historical Chart
+            const historyLabels = Array.from({length: 23}, (_, i) => 2003 + i);
+            const historyData = [
+                0, 4, 5, 5, 10, 5, 25, 24, 35, 50, 
+                55, 280, 148, 95, 122, 192, 168, 180, 148, 148, 
+                220, 197, 266
+            ];
+
+            charts.history = new Chart(document.getElementById('historicalChart'), {
+                type: 'bar',
+                data: {
+                    labels: historyLabels,
+                    datasets: [{
+                        label: 'Annual Sales Revenue (Million Baht)',
+                        data: historyData,
+                        backgroundColor: (context) => (context.raw === 266) ? '#4ade80' : '#65a30d',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Million Baht' } } }
+                }
+            });
+
+            // B. Target vs Accumulated Chart
+            const incomeRow = data.find(r => r[0] && r[0].trim() === 'Total income');
+            let accumulatedIncome = [];
+            let currentSum = 0;
+            
+            for (let i = 1; i <= 12; i++) {
+                const rawVal = incomeRow && incomeRow[i] ? incomeRow[i].toString().trim() : '';
+                if (rawVal === '') {
+                    accumulatedIncome.push(null); 
+                } else {
+                    currentSum += parseVal(rawVal);
+                    accumulatedIncome.push(parseFloat((currentSum / 1000000).toFixed(2)));
+                }
+            }
+
+            charts.target = new Chart(document.getElementById('targetChart'), {
+                type: 'bar',
+                data: {
+                    labels: monthsShort,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Target (265M)',
+                            data: Array(12).fill(265),
+                            borderColor: '#ef4444',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Accumulated Income',
+                            data: accumulatedIncome,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4,
+                            order: 2,
+                            skipNull: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Million THB' }, suggestedMax: 300 } }
+                }
+            });
+        }
+
+        // --- 2. Dynamic Charts (Update with Filter) ---
+        function updateDynamicDashboard(filterValue) {
+            const isAllYear = filterValue === 'all';
+            const monthIndex = isAllYear ? 0 : parseInt(filterValue);
+            
+            let dIncome = 0, dCogs = 0, dExpense = 0, dNet = 0, dAcc = 0;
+            let dLateTimes = 0, dLateHours = 0;
+            let dExpenseList = [];
+            
+            // Arrays for Line Charts (Profit Trend)
+            let trendLabels = [];
+            let trendNetData = [];
+            let trendAccData = [];
+
+            if (!isAllYear) {
+                // --- Single Month Logic ---
+                dIncome = getRowValue('Total income', monthIndex);
+                dCogs = getRowValue('Cost of goods sold', monthIndex);
+                dExpense = getRowValue('Expense', monthIndex);
+                dNet = getRowValue('Net profit & loss', monthIndex);
+                dAcc = getRowValue('Accumulated profit', monthIndex);
+
+                // Late Stats
+                let lateSection = false;
+                for (let row of globalData) {
+                    if (row[0] === 'Late report') { lateSection = true; continue; }
+                    if (lateSection && row[0] === 'Times') dLateTimes = parseVal(row[monthIndex]);
+                    if (lateSection && row[0] === 'Hours') dLateHours = parseVal(row[monthIndex]);
+                }
+
+                // Expense Breakdown
+                let expSection = false;
+                for (let row of globalData) {
+                    if (row[0] === 'Expense Breakdown') { expSection = true; continue; }
+                    if (expSection) {
+                        if (!row[0] || row[0] === 'Late report') break;
+                        const val = parseVal(row[monthIndex]);
+                        if (val > 0) dExpenseList.push({ label: row[0], value: val });
+                    }
+                }
+
+                // Trend Data (Show only selected month point or maybe 1-12 but highlight? Let's show single point context)
+                // Actually for trend chart, showing just a single dot is weird. 
+                // Let's standardise: If single month, Labels=['Month'], Data=[Value]
+                trendLabels = [monthsShort[monthIndex - 1]];
+                trendNetData = [dNet];
+                trendAccData = [dAcc];
+
+                // Update Labels
+                document.getElementById('labelIncome').innerText = `Total Income (${monthsShort[monthIndex-1]})`;
+                document.getElementById('labelExpense').innerText = `Total Expenses (${monthsShort[monthIndex-1]})`;
+                document.getElementById('labelNet').innerText = `Net Profit/Loss (${monthsShort[monthIndex-1]})`;
+
+            } else {
+                // --- All Year Logic (Summation) ---
+                const arrIncome = getRowArray('Total income');
+                const arrCogs = getRowArray('Cost of goods sold');
+                const arrExpense = getRowArray('Expense');
+                const arrNet = getRowArray('Net profit & loss');
+                const arrAcc = getRowArray('Accumulated profit'); // This is already accumulated in CSV usually
+
+                dIncome = arrIncome.reduce((a, b) => a + b, 0);
+                dCogs = arrCogs.reduce((a, b) => a + b, 0);
+                dExpense = arrExpense.reduce((a, b) => a + b, 0);
+                dNet = arrNet.reduce((a, b) => a + b, 0);
+                
+                // For Accumulated Profit, we take the last non-zero value or the value at Dec
+                // Assuming arrAcc contains running totals. We want the latest status.
+                // Find last index with data
+                let lastIdx = arrAcc.findLastIndex(v => v !== 0);
+                dAcc = lastIdx >= 0 ? arrAcc[lastIdx] : 0;
+
+                // Late Stats Sum
+                let lateSection = false;
+                for (let row of globalData) {
+                    if (row[0] === 'Late report') { lateSection = true; continue; }
+                    if (lateSection && row[0] === 'Times') {
+                        dLateTimes = row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0);
+                    }
+                    if (lateSection && row[0] === 'Hours') {
+                        dLateHours = row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0);
+                    }
+                }
+
+                // Expense Breakdown Sum
+                let expSection = false;
+                for (let row of globalData) {
+                    if (row[0] === 'Expense Breakdown') { expSection = true; continue; }
+                    if (expSection) {
+                        if (!row[0] || row[0] === 'Late report') break;
+                        const totalVal = row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0);
+                        if (totalVal > 0) dExpenseList.push({ label: row[0], value: totalVal });
+                    }
+                }
+
+                // Trend Data (Show full year trend)
+                trendLabels = monthsShort;
+                trendNetData = arrNet;
+                trendAccData = arrAcc; // Show the running accumulated line
+
+                // Update Labels
+                document.getElementById('labelIncome').innerText = `Total Income (2026)`;
+                document.getElementById('labelExpense').innerText = `Total Expenses (2026)`;
+                document.getElementById('labelNet').innerText = `Net Profit/Loss (2026)`;
+            }
+
+            // Update Cards
+            document.getElementById('sumIncome').innerText = formatCurrency(dIncome);
+            document.getElementById('sumExpense').innerText = formatCurrency(dCogs + dExpense);
+            
+            const netEl = document.getElementById('sumNet');
+            netEl.innerText = formatCurrency(dNet);
+            netEl.className = `text-2xl font-bold ${dNet < 0 ? 'text-red-600' : 'text-emerald-600'}`;
+            
+            document.getElementById('sumAcc').innerText = formatCurrency(dAcc);
+
+            // Sort Expense
+            dExpenseList.sort((a, b) => b.value - a.value);
+
+            // --- Render Dynamic Charts ---
+            
+            // 1. Main Chart (Income vs Expense)
+            if(charts.main) charts.main.destroy();
+            charts.main = new Chart(document.getElementById('mainChart'), {
+                type: 'bar',
+                data: {
+                    labels: isAllYear ? ['Whole Year 2026'] : [monthsShort[monthIndex-1]],
+                    datasets: [
+                        { label: 'รายได้รวม', data: [dIncome], backgroundColor: '#3b82f6', borderRadius: 6 },
+                        { label: 'รายจ่ายรวม', data: [dCogs + dExpense], backgroundColor: '#f97316', borderRadius: 6 }
+                    ]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // 2. Profit Trends
+            if(charts.profit) charts.profit.destroy();
+            charts.profit = new Chart(document.getElementById('profitChart'), {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [
+                        { label: 'กำไรสุทธิ', data: trendNetData, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3 },
+                        { label: 'กำไรสะสม', data: trendAccData, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
+                    ]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // 3. Expense Breakdown
+            if(charts.expense) charts.expense.destroy();
+            const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#475569', '#94a3b8'];
+            charts.expense = new Chart(document.getElementById('expenseChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dExpenseList.map(i => `${i.label} ${formatCompactNumber(i.value)}`),
+                    datasets: [{
+                        data: dExpenseList.map(i => i.value),
+                        backgroundColor: colors.slice(0, dExpenseList.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } }
+                    }
+                }
+            });
+
+            // 4. Late Stats
+            if(charts.late) charts.late.destroy();
+            charts.late = new Chart(document.getElementById('lateChart'), {
+                type: 'bar',
+                data: {
+                    labels: isAllYear ? ['Whole Year'] : [monthsShort[monthIndex-1]],
+                    datasets: [
+                        { label: 'จำนวนครั้ง (ครั้ง)', data: [dLateTimes], backgroundColor: '#f59e0b', yAxisID: 'y' },
+                        { label: 'จำนวนชั่วโมง (ชม.)', data: [dLateHours], backgroundColor: '#6366f1', yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { position: 'left', title: { display: true, text: 'ครั้ง' } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'ชั่วโมง' } }
+                    }
                 }
             });
         }
@@ -136,173 +486,6 @@ Hours,0.46,,,,,,,,,,,`;
             if (Math.abs(number) >= 1000000) return (number / 1000000).toFixed(1) + 'M';
             if (Math.abs(number) >= 1000) return (number / 1000).toFixed(1) + 'k';
             return number.toFixed(0);
-        }
-
-        document.getElementById('csvUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            Papa.parse(file, {
-                header: false,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    processData(results.data);
-                }
-            });
-        });
-
-        function processData(data) {
-            const monthIdx = 1;
-
-            const findValue = (label) => {
-                const row = data.find(r => r[0] && r[0].trim() === label);
-                if (!row || !row[monthIdx]) return 0;
-                return parseFloat(row[monthIdx].toString().replace(/,/g, '')) || 0;
-            };
-
-            const income = findValue('Total income');
-            const cogs = findValue('Cost of goods sold');
-            const expense = findValue('Expense');
-            const netProfit = findValue('Net profit & loss');
-            const accProfit = findValue('Accumulated profit');
-
-            let lateTimes = 0, lateHours = 0, lateSectionFound = false;
-            for (let i = 0; i < data.length; i++) {
-                if (data[i][0] && data[i][0].trim() === 'Late report') { lateSectionFound = true; continue; }
-                if (lateSectionFound && data[i][0]) {
-                    if (data[i][0].trim() === 'Times') lateTimes = parseFloat(data[i][monthIdx]) || 0;
-                    if (data[i][0].trim() === 'Hours') lateHours = parseFloat(data[i][monthIdx]) || 0;
-                }
-            }
-
-            document.getElementById('sumIncome').innerText = formatCurrency(income);
-            document.getElementById('sumExpense').innerText = formatCurrency(cogs + expense);
-            document.getElementById('sumNet').innerText = formatCurrency(netProfit);
-            document.getElementById('sumAcc').innerText = formatCurrency(accProfit);
-
-            const netEl = document.getElementById('sumNet');
-            if (netProfit < 0) {
-                netEl.classList.remove('text-emerald-600', 'text-slate-800');
-                netEl.classList.add('text-red-600');
-            } else {
-                netEl.classList.remove('text-red-600', 'text-slate-800');
-                netEl.classList.add('text-emerald-600');
-            }
-
-            // --- ส่วนการเรียงลำดับค่าใช้จ่าย ---
-            let expenseItems = [];
-            let inBreakdown = false;
-            for (let i = 0; i < data.length; i++) {
-                if (data[i][0] === 'Expense Breakdown') { inBreakdown = true; continue; }
-                if (inBreakdown) {
-                    if (!data[i][0] || data[i][0].trim() === '' || data[i][0] === 'Late report') break;
-                    const val = parseFloat(data[i][monthIdx].toString().replace(/,/g, '')) || 0;
-                    if (val > 0) { // แสดงเฉพาะที่มีค่ามากกว่า 0
-                        expenseItems.push({ label: data[i][0], value: val });
-                    }
-                }
-            }
-
-            // เรียงลำดับจากมากไปน้อย
-            expenseItems.sort((a, b) => b.value - a.value);
-
-            const expLabels = expenseItems.map(item => item.label);
-            const expValues = expenseItems.map(item => item.value);
-
-            updateCharts(income, cogs, expense, netProfit, accProfit, expLabels, expValues, lateTimes, lateHours);
-        }
-
-        function updateCharts(income, cogs, expense, netProfit, accProfit, expLabels, expValues, lateTimes, lateHours) {
-            Object.values(charts).forEach(c => c && c.destroy());
-
-            charts.main = new Chart(document.getElementById('mainChart'), {
-                type: 'bar',
-                data: {
-                    labels: ['มกราคม'],
-                    datasets: [
-                        { label: 'รายได้รวม', data: [income], backgroundColor: '#3b82f6', borderRadius: 6 },
-                        { label: 'รายจ่ายรวม', data: [cogs + expense], backgroundColor: '#f97316', borderRadius: 6 }
-                    ]
-                },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-
-            charts.profit = new Chart(document.getElementById('profitChart'), {
-                type: 'line',
-                data: {
-                    labels: ['Jan'],
-                    datasets: [
-                        { label: 'กำไรสุทธิ', data: [netProfit], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3 },
-                        { label: 'กำไรสะสม', data: [accProfit], borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
-                    ]
-                },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-
-            // ปรับแต่ง Donut Chart และ Legend
-            const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#475569', '#94a3b8'];
-            
-            charts.expense = new Chart(document.getElementById('expenseChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: expLabels,
-                    datasets: [{
-                        data: expValues,
-                        backgroundColor: colors.slice(0, expLabels.length),
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 15,
-                                font: { size: 11 },
-                                color: '#475569',
-                                generateLabels: (chart) => {
-                                    const data = chart.data;
-                                    if (data.labels.length && data.datasets.length) {
-                                        return data.labels.map((label, i) => {
-                                            const meta = chart.getDatasetMeta(0);
-                                            const style = meta.controller.getStyle(i);
-                                            return {
-                                                text: `${label} (${formatCompactNumber(data.datasets[0].data[i])})`,
-                                                fillStyle: style.backgroundColor, // ใช้สีเดียวกับกราฟ
-                                                strokeStyle: style.backgroundColor,
-                                                lineWidth: 0,
-                                                hidden: chart.getDatasetMeta(0).data[i].hidden,
-                                                index: i,
-                                                fontColor: style.backgroundColor // ทำให้สีตัวอักษรตรงกับสีกราฟ
-                                            };
-                                        });
-                                    }
-                                    return [];
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            charts.late = new Chart(document.getElementById('lateChart'), {
-                type: 'bar',
-                data: {
-                    labels: ['Jan'],
-                    datasets: [
-                        { label: 'จำนวนครั้ง (ครั้ง)', data: [lateTimes], backgroundColor: '#f59e0b', yAxisID: 'y' },
-                        { label: 'จำนวนชั่วโมง (ชม.)', data: [lateHours], backgroundColor: '#6366f1', yAxisID: 'y1' }
-                    ]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { position: 'left', title: { display: true, text: 'ครั้ง' } },
-                        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'ชั่วโมง' } }
-                    }
-                }
-            });
         }
     </script>
 </body>
