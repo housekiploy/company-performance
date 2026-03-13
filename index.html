@@ -161,8 +161,9 @@ Hours,0.46,,,,,,,,,,,`;
         };
 
         function loadInitialData() {
-            // ลองดึงข้อมูลจากไฟล์ data.csv บน GitHub ก่อน
-            fetch('data.csv')
+            // ใช้เทคนิค Cache Busting (เพิ่มเวลาปัจจุบันต่อท้าย) เพื่อบังคับให้ Browser โหลดไฟล์ใหม่เสมอ
+            const timestamp = new Date().getTime();
+            fetch(`data.csv?v=${timestamp}`)
                 .then(response => {
                     if (!response.ok) throw new Error('File not found');
                     return response.text();
