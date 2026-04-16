@@ -355,11 +355,11 @@ Over 90 Days,25000,,,,,,,,,,,`;
             // ยอดคงค้าง AR ต้องใช้ข้อมูลของเดือนใดเดือนหนึ่ง ไม่นำมาบวกกัน 12 เดือน
             let targetMonthIdxForAR = monthIndex;
             if (isAllYear) {
-                targetMonthIdxForAR = 1;
+                targetMonthIdxForAR = 1; // เริ่มต้นที่มกราคมไว้ก่อน
                 let arHeaderIdx = globalData.findIndex(r => r[0] && r[0].trim() === 'A/R Aging Breakdown');
                 if (arHeaderIdx !== -1 && globalData[arHeaderIdx+1]) {
                     for(let m = 12; m >= 1; m--) {
-                         // หาเดือนล่าสุดที่มีการกรอกข้อมูล
+                         // หาเดือนล่าสุดที่คอลัมน์ไม่ว่างเปล่า
                          if(globalData[arHeaderIdx+1][m] && globalData[arHeaderIdx+1][m].toString().trim() !== '') {
                              targetMonthIdxForAR = m;
                              break;
@@ -404,8 +404,11 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 if (arSection) {
                     if (label === 'Expense Breakdown' || label === 'Late report' || label === 'Overall') { arSection = false; }
                     else {
+                        // ดักจับและแปลงเครื่องหมาย ? หรืออักขระขยะ ให้กลับเป็น -
+                        const cleanLabel = label.replace(/[\?]/g, '-');
+                        // ใช้ค่าจากเดือนล่าสุดที่มีข้อมูล (targetMonthIdxForAR) แทนการบวกสะสม
                         const val = parseVal(row[targetMonthIdxForAR]);
-                        if (val > 0) dArAgingList.push({ label: label, value: val });
+                        if (val > 0) dArAgingList.push({ label: cleanLabel, value: val });
                     }
                 }
             }
@@ -439,7 +442,7 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 document.getElementById('labelNet').innerText = `Net Profit/Loss (2026)`;
             }
 
-            // Update Label for AR Aging
+            // Update Label for AR Aging ให้แสดงเดือนล่าสุดที่ดึงข้อมูลมา
             const arMonthName = targetMonthIdxForAR > 0 ? monthsShort[targetMonthIdxForAR-1] : '';
             document.getElementById('labelArMonth').innerText = isAllYear && arMonthName ? `(อิงข้อมูลล่าสุดเดือน ${arMonthName})` : '';
 
@@ -512,7 +515,8 @@ Over 90 Days,25000,,,,,,,,,,,`;
 
             // 4. AR Aging (Pie Chart) - NEW
             if(charts.ar) charts.ar.destroy();
-            const colorsAR = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6'];
+            // เปลี่ยนสีลำดับที่ 2 (1-30 Days) ให้เป็นสีเหลือง (#fde047)
+            const colorsAR = ['#10b981', '#fde047', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6'];
             charts.ar = new Chart(document.getElementById('arChart'), {
                 type: 'pie',
                 plugins: [ChartDataLabels],
@@ -578,8 +582,9 @@ Over 90 Days,25000,,,,,,,,,,,`;
         }
 
         function formatCompactNumber(number) {
-            if (Math.abs(number) >= 1000000) return (number / 1000000).toFixed(2) + 'M'; // เช่น 1.50M
-            if (Math.abs(number) >= 1000) return (number / 1000).toFixed(1) + 'k';    // เช่น 150.5k
+            // ใช้ parseFloat เพื่อตัดจุดทศนิยมที่เป็น .0 ออกอัตโนมัติ
+            if (Math.abs(number) >= 1000000) return parseFloat((number / 1000000).toFixed(2)) + 'M'; 
+            if (Math.abs(number) >= 1000) return parseFloat((number / 1000).toFixed(1)) + 'k';    
             return number.toFixed(0);
         }
     </script>
