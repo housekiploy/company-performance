@@ -357,10 +357,24 @@ Over 90 Days,25000,,,,,,,,,,,`;
             if (isAllYear) {
                 targetMonthIdxForAR = 1; // เริ่มต้นที่มกราคมไว้ก่อน
                 let arHeaderIdx = globalData.findIndex(r => r[0] && r[0].trim() === 'A/R Aging Breakdown');
-                if (arHeaderIdx !== -1 && globalData[arHeaderIdx+1]) {
+                if (arHeaderIdx !== -1) {
                     for(let m = 12; m >= 1; m--) {
-                         // หาเดือนล่าสุดที่คอลัมน์ไม่ว่างเปล่า
-                         if(globalData[arHeaderIdx+1][m] && globalData[arHeaderIdx+1][m].toString().trim() !== '') {
+                         let hasDataInMonth = false;
+                         // ตรวจสอบข้อมูลในหมวด AR ทุกบรรทัดเพื่อป้องกัน error หากบางบรรทัดว่างหรือไม่มีคอมม่า
+                         for(let r = arHeaderIdx + 1; r < globalData.length; r++) {
+                             const lbl = globalData[r][0] ? globalData[r][0].trim() : '';
+                             if (['Expense Breakdown', 'Late report', 'Overall'].includes(lbl)) break; 
+                             
+                             const cellVal = globalData[r][m];
+                             // เช็ค undefined ก่อนใช้ toString() ป้องกันระบบล่ม (Crash) ที่ทำให้กราฟ Blank
+                             if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== '') {
+                                 if (parseVal(cellVal) !== 0) {
+                                     hasDataInMonth = true;
+                                     break;
+                                 }
+                             }
+                         }
+                         if (hasDataInMonth) {
                              targetMonthIdxForAR = m;
                              break;
                          }
@@ -404,8 +418,8 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 if (arSection) {
                     if (label === 'Expense Breakdown' || label === 'Late report' || label === 'Overall') { arSection = false; }
                     else {
-                        // ดักจับและแปลงเครื่องหมาย ? หรืออักขระขยะ ให้กลับเป็น -
-                        const cleanLabel = label.replace(/[\?]/g, '-');
+                        // ดักจับทั้งเครื่องหมาย ? และตัวอักขระแปลกประหลาด  (Unicode FFFD) ที่เกิดจาก Excel แปลงโค้ดภาษาผิด
+                        const cleanLabel = label.replace(/[\?\uFFFD]/g, '-');
                         // ใช้ค่าจากเดือนล่าสุดที่มีข้อมูล (targetMonthIdxForAR) แทนการบวกสะสม
                         const val = parseVal(row[targetMonthIdxForAR]);
                         if (val > 0) dArAgingList.push({ label: cleanLabel, value: val });
