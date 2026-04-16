@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
-        .chart-container { position: relative; height: 350px; width: 100%; }
+        .chart-container { position: relative; width: 100%; min-height: 300px; }
         .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); padding: 1.5rem; }
     </style>
 </head>
@@ -24,7 +24,7 @@
                 <p class="text-slate-500">HITEC Food Equipment Co., Ltd. (Updated Analysis)</p>
             </div>
             <div class="flex flex-col sm:flex-row items-center gap-3">
-                <!-- NEW: Month Filter -->
+                <!-- Month Filter -->
                 <select id="monthFilter" class="bg-white border border-slate-300 text-slate-700 font-semibold py-2.5 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer h-full">
                     <option value="1" selected>มกราคม (Jan)</option>
                     <option value="2">กุมภาพันธ์ (Feb)</option>
@@ -41,7 +41,7 @@
                     <option value="all">📊 สรุปทั้งปี 2026 (All Year)</option>
                 </select>
 
-                <!-- Upload Button -->
+                <!-- Upload Button (For Previewing before pushing to Github) -->
                 <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-blue-200 flex items-center h-full whitespace-nowrap">
                     📂 อัปโหลดไฟล์ใหม่ (CSV)
                     <input type="file" id="csvUpload" class="hidden" accept=".csv">
@@ -69,58 +69,70 @@
             </div>
         </div>
 
-        <!-- STATIC SECTION: Historical & Target Charts (Not affected by filter) -->
+        <!-- STATIC SECTION: Historical & Target Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- กราฟที่ 1: ประวัติยอดขาย 2003-2025 -->
+            <!-- ประวัติยอดขาย 2003-2025 -->
             <div class="card col-span-1 lg:col-span-2">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">ประวัติยอดขายรายปี (Annual Sales Revenue 2003-2025)</h3>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <canvas id="historicalChart"></canvas>
                 </div>
             </div>
             
-            <!-- กราฟที่ 2: Target vs Actual (Accumulated) -->
+            <!-- Target vs Actual -->
             <div class="card col-span-1 lg:col-span-2">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">เป้าหมาย vs ยอดขายสะสม ปี 2026 (Target: 265M THB)</h3>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <canvas id="targetChart"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- DYNAMIC SECTION: Charts affected by Filter -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">รายรับเทียบกับรายจ่ายรวม (Income vs Total Expenses)</h3>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <canvas id="mainChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">แนวโน้มกำไร (Profit Trends)</h3>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <canvas id="profitChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">สัดส่วนค่าใช้จ่าย (Expense Breakdown - Sorted)</h3>
-                <div class="chart-container">
+                <!-- เพิ่มความสูงเป็น 380px เพื่อกันตัวหนังสือตกหล่น -->
+                <div class="chart-container" style="height: 380px;">
                     <canvas id="expenseChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
+                <h3 class="text-lg font-bold mb-4 text-slate-700 flex items-center justify-between">
+                    อายุลูกหนี้ (A/R Aging) 
+                    <span id="labelArMonth" class="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded"></span>
+                </h3>
+                <div class="chart-container" style="height: 380px;">
+                    <canvas id="arChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- ย้าย Late Stats มาไว้ข้างล่างสุดให้เต็มกรอบ -->
+            <div class="card col-span-1 lg:col-span-2">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">สถิติการมาสาย (Late Report Statistics)</h3>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 320px;">
                     <canvas id="lateChart"></canvas>
                 </div>
             </div>
         </div>
 
         <div class="mt-8 text-center text-slate-400 text-sm">
-            Dashboard นี้ฝังข้อมูลจาก Monthly Database.csv เรียบร้อยแล้ว | อัปเดตล่าสุด: กุมภาพันธ์ 2026
+            Dashboard System by HITEC Food Equipment | Auto-syncing with data.csv
         </div>
     </div>
 
@@ -145,23 +157,29 @@ Travel & Transportation-Local,44799.62,,,,,,,,,,,
 Loss on Exchange Rate,150582.23,,,,,,,,,,,
 Late report,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
 Times,24,,,,,,,,,,,
-Hours,0.46,,,,,,,,,,,`;
+Hours,0.46,,,,,,,,,,,
+A/R Aging Breakdown,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
+Not Due,1200000,,,,,,,,,,,
+1-30 Days,450000,,,,,,,,,,,
+31-60 Days,150000,,,,,,,,,,,
+61-90 Days,50000,,,,,,,,,,,
+Over 90 Days,25000,,,,,,,,,,,`;
 
         let charts = {};
-        let globalData = []; // Store parsed data globally
+        let globalData = []; 
         const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // ตั้งค่า Chart.js ทั่วไป (ปิด Datalabels ไว้เป็นค่า Default ค่อยไปเปิดใช้เฉพาะบางกราฟ)
+        Chart.defaults.set('plugins.datalabels', { display: false });
 
         window.onload = function() {
             loadInitialData();
-            
-            // Add event listener for filter
             document.getElementById('monthFilter').addEventListener('change', function() {
                 updateDynamicDashboard(this.value);
             });
         };
 
         function loadInitialData() {
-            // ใช้เทคนิค Cache Busting (เพิ่มเวลาปัจจุบันต่อท้าย) เพื่อบังคับให้ Browser โหลดไฟล์ใหม่เสมอ
             const timestamp = new Date().getTime();
             fetch(`data.csv?v=${timestamp}`)
                 .then(response => {
@@ -174,7 +192,7 @@ Hours,0.46,,,,,,,,,,,`;
                 })
                 .catch(error => {
                     console.log('No external data.csv found, using embedded data.');
-                    parseCSVText(embeddedCsvData); // ใช้ข้อมูลสำรองที่ฝังไว้
+                    parseCSVText(embeddedCsvData); 
                 });
         }
 
@@ -184,8 +202,8 @@ Hours,0.46,,,,,,,,,,,`;
                 skipEmptyLines: true,
                 complete: function(results) {
                     globalData = results.data;
-                    initStaticCharts(globalData); // Render static charts once
-                    updateDynamicDashboard(document.getElementById('monthFilter').value || '1'); // Render dynamic charts
+                    initStaticCharts(globalData);
+                    updateDynamicDashboard(document.getElementById('monthFilter').value || '1'); 
                 }
             });
         }
@@ -204,7 +222,6 @@ Hours,0.46,,,,,,,,,,,`;
             });
         });
 
-        // --- Data Extraction Helpers ---
         function parseVal(val) {
             if (!val) return 0;
             return parseFloat(val.toString().replace(/,/g, '')) || 0;
@@ -222,19 +239,14 @@ Hours,0.46,,,,,,,,,,,`;
             return row.slice(1, 13).map(v => parseVal(v));
         }
 
-        // --- 1. Static Charts (Never Change with Filter) ---
+        // --- 1. Static Charts ---
         function initStaticCharts(data) {
-            // Destroy existing static charts if any
             if(charts.history) charts.history.destroy();
             if(charts.target) charts.target.destroy();
 
-            // A. Historical Chart
+            // A. Historical Chart - เปลี่ยนเป็นสีเขียวสีเดียวตามที่ร้องขอ
             const historyLabels = Array.from({length: 23}, (_, i) => 2003 + i);
-            const historyData = [
-                0, 4, 5, 5, 10, 5, 25, 24, 35, 50, 
-                55, 280, 148, 95, 122, 192, 168, 180, 148, 148, 
-                220, 197, 266
-            ];
+            const historyData = [0.5, 5.6, 6.3, 6.5, 11, 6, 26, 25, 36, 50, 54, 279, 148, 94, 122, 193, 168, 182, 147, 146, 221, 197, 266];
 
             charts.history = new Chart(document.getElementById('historicalChart'), {
                 type: 'bar',
@@ -243,7 +255,7 @@ Hours,0.46,,,,,,,,,,,`;
                     datasets: [{
                         label: 'Annual Sales Revenue (Million Baht)',
                         data: historyData,
-                        backgroundColor: (context) => (context.raw === 266) ? '#4ade80' : '#65a30d',
+                        backgroundColor: '#10b981', // สีเขียว Emerald-500 สีเดียวล้วน
                         borderRadius: 4
                     }]
                 },
@@ -259,7 +271,6 @@ Hours,0.46,,,,,,,,,,,`;
             const incomeRow = data.find(r => r[0] && r[0].trim() === 'Total income');
             let accumulatedIncome = [];
             let currentSum = 0;
-            
             for (let i = 1; i <= 12; i++) {
                 const rawVal = incomeRow && incomeRow[i] ? incomeRow[i].toString().trim() : '';
                 if (rawVal === '') {
@@ -286,17 +297,17 @@ Hours,0.46,,,,,,,,,,,`;
                             pointRadius: 0,
                             fill: false,
                             order: 1,
-                            datalabels: { display: false } // ปิดตัวเลขของเส้น Target
+                            datalabels: { display: false } 
                         },
                         {
                             type: 'line',
                             label: 'Accumulated Income',
                             data: accumulatedIncome,
                             borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.15)', // สีแรเงาใต้เส้น
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
                             borderWidth: 3,
                             fill: true,
-                            tension: 0.3, // ทำให้เส้นมีความโค้งมน
+                            tension: 0.3,
                             pointBackgroundColor: '#3b82f6',
                             pointRadius: 5,
                             pointHoverRadius: 7,
@@ -309,9 +320,7 @@ Hours,0.46,,,,,,,,,,,`;
                                 offset: 8,
                                 color: '#1e40af',
                                 font: { weight: 'bold', size: 11 },
-                                formatter: function(value) {
-                                    return value !== null ? value + 'M' : ''; // แสดงตัว M ต่อท้าย
-                                }
+                                formatter: function(value) { return value !== null ? value + 'M' : ''; }
                             }
                         }
                     ]
@@ -319,71 +328,100 @@ Hours,0.46,,,,,,,,,,,`;
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + ' M THB';
-                                }
-                            }
-                        }
-                    },
+                    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + context.parsed.y + ' M THB'; } } } },
                     scales: { y: { beginAtZero: true, title: { display: true, text: 'Million THB' }, suggestedMax: 300 } }
                 }
             });
         }
 
-        // --- 2. Dynamic Charts (Update with Filter) ---
+        // --- 2. Dynamic Charts ---
         function updateDynamicDashboard(filterValue) {
             const isAllYear = filterValue === 'all';
             const monthIndex = isAllYear ? 0 : parseInt(filterValue);
+            const isMobile = window.innerWidth < 768; // ตรวจสอบขนาดหน้าจอ
             
             let dIncome = 0, dCogs = 0, dExpense = 0, dNet = 0, dAcc = 0;
             let dLateTimes = 0, dLateHours = 0;
             let dExpenseList = [];
+            let dArAgingList = [];
             
-            // --- ALWAYS GET FULL YEAR DATA FOR PROFIT TRENDS ---
             const arrNet = getRowArray('Net profit & loss');
             const arrAcc = getRowArray('Accumulated profit');
             let trendLabels = monthsShort;
             let trendNetData = arrNet;
             let trendAccData = arrAcc;
 
+            // --- Logic หาเดือนล่าสุดของ AR Aging ---
+            // ยอดคงค้าง AR ต้องใช้ข้อมูลของเดือนใดเดือนหนึ่ง ไม่นำมาบวกกัน 12 เดือน
+            let targetMonthIdxForAR = monthIndex;
+            if (isAllYear) {
+                targetMonthIdxForAR = 1;
+                let arHeaderIdx = globalData.findIndex(r => r[0] && r[0].trim() === 'A/R Aging Breakdown');
+                if (arHeaderIdx !== -1 && globalData[arHeaderIdx+1]) {
+                    for(let m = 12; m >= 1; m--) {
+                         // หาเดือนล่าสุดที่มีการกรอกข้อมูล
+                         if(globalData[arHeaderIdx+1][m] && globalData[arHeaderIdx+1][m].toString().trim() !== '') {
+                             targetMonthIdxForAR = m;
+                             break;
+                         }
+                    }
+                }
+            }
+
+            // --- Data Extraction Loop ---
+            let expSection = false;
+            let lateSection = false;
+            let arSection = false;
+
+            for (let row of globalData) {
+                const label = row[0] ? row[0].trim() : '';
+                
+                // Track Sections
+                if (label === 'Expense Breakdown') { expSection = true; lateSection = false; arSection = false; continue; }
+                if (label === 'Late report') { lateSection = true; expSection = false; arSection = false; continue; }
+                if (label === 'A/R Aging Breakdown') { arSection = true; expSection = false; lateSection = false; continue; }
+                if (!label || label === '') continue;
+
+                // Extract Expense
+                if (expSection) {
+                    if (label === 'Late report' || label === 'A/R Aging Breakdown' || label === 'Overall') { expSection = false; }
+                    else {
+                        const val = isAllYear ? row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0) : parseVal(row[monthIndex]);
+                        if (val > 0) dExpenseList.push({ label: label, value: val });
+                    }
+                }
+
+                // Extract Late Stats
+                if (lateSection) {
+                    if (label === 'A/R Aging Breakdown' || label === 'Expense Breakdown' || label === 'Overall') { lateSection = false; }
+                    else {
+                        if (label === 'Times') dLateTimes = isAllYear ? row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0) : parseVal(row[monthIndex]);
+                        if (label === 'Hours') dLateHours = isAllYear ? row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0) : parseVal(row[monthIndex]);
+                    }
+                }
+
+                // Extract AR Aging
+                if (arSection) {
+                    if (label === 'Expense Breakdown' || label === 'Late report' || label === 'Overall') { arSection = false; }
+                    else {
+                        const val = parseVal(row[targetMonthIdxForAR]);
+                        if (val > 0) dArAgingList.push({ label: label, value: val });
+                    }
+                }
+            }
+
+            // Summary values
             if (!isAllYear) {
-                // --- Single Month Logic ---
                 dIncome = getRowValue('Total income', monthIndex);
                 dCogs = getRowValue('Cost of goods sold', monthIndex);
                 dExpense = getRowValue('Expense', monthIndex);
                 dNet = getRowValue('Net profit & loss', monthIndex);
                 dAcc = getRowValue('Accumulated profit', monthIndex);
-
-                // Late Stats
-                let lateSection = false;
-                for (let row of globalData) {
-                    if (row[0] === 'Late report') { lateSection = true; continue; }
-                    if (lateSection && row[0] === 'Times') dLateTimes = parseVal(row[monthIndex]);
-                    if (lateSection && row[0] === 'Hours') dLateHours = parseVal(row[monthIndex]);
-                }
-
-                // Expense Breakdown
-                let expSection = false;
-                for (let row of globalData) {
-                    if (row[0] === 'Expense Breakdown') { expSection = true; continue; }
-                    if (expSection) {
-                        if (!row[0] || row[0] === 'Late report') break;
-                        const val = parseVal(row[monthIndex]);
-                        if (val > 0) dExpenseList.push({ label: row[0], value: val });
-                    }
-                }
-
-                // Update Labels
+                
                 document.getElementById('labelIncome').innerText = `Total Income (${monthsShort[monthIndex-1]})`;
                 document.getElementById('labelExpense').innerText = `Total Expenses (${monthsShort[monthIndex-1]})`;
                 document.getElementById('labelNet').innerText = `Net Profit/Loss (${monthsShort[monthIndex-1]})`;
-
             } else {
-                // --- All Year Logic (Summation) ---
                 const arrIncome = getRowArray('Total income');
                 const arrCogs = getRowArray('Cost of goods sold');
                 const arrExpense = getRowArray('Expense');
@@ -393,57 +431,32 @@ Hours,0.46,,,,,,,,,,,`;
                 dExpense = arrExpense.reduce((a, b) => a + b, 0);
                 dNet = arrNet.reduce((a, b) => a + b, 0);
                 
-                // For Accumulated Profit, we take the last non-zero value or the value at Dec
-                // Assuming arrAcc contains running totals. We want the latest status.
-                // Find last index with data
                 let lastIdx = arrAcc.findLastIndex(v => v !== 0);
                 dAcc = lastIdx >= 0 ? arrAcc[lastIdx] : 0;
 
-                // Late Stats Sum
-                let lateSection = false;
-                for (let row of globalData) {
-                    if (row[0] === 'Late report') { lateSection = true; continue; }
-                    if (lateSection && row[0] === 'Times') {
-                        dLateTimes = row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0);
-                    }
-                    if (lateSection && row[0] === 'Hours') {
-                        dLateHours = row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0);
-                    }
-                }
-
-                // Expense Breakdown Sum
-                let expSection = false;
-                for (let row of globalData) {
-                    if (row[0] === 'Expense Breakdown') { expSection = true; continue; }
-                    if (expSection) {
-                        if (!row[0] || row[0] === 'Late report') break;
-                        const totalVal = row.slice(1, 13).reduce((a,v) => a + parseVal(v), 0);
-                        if (totalVal > 0) dExpenseList.push({ label: row[0], value: totalVal });
-                    }
-                }
-
-                // Update Labels
                 document.getElementById('labelIncome').innerText = `Total Income (2026)`;
                 document.getElementById('labelExpense').innerText = `Total Expenses (2026)`;
                 document.getElementById('labelNet').innerText = `Net Profit/Loss (2026)`;
             }
 
+            // Update Label for AR Aging
+            const arMonthName = targetMonthIdxForAR > 0 ? monthsShort[targetMonthIdxForAR-1] : '';
+            document.getElementById('labelArMonth').innerText = isAllYear && arMonthName ? `(อิงข้อมูลล่าสุดเดือน ${arMonthName})` : '';
+
             // Update Cards
             document.getElementById('sumIncome').innerText = formatCurrency(dIncome);
             document.getElementById('sumExpense').innerText = formatCurrency(dCogs + dExpense);
-            
             const netEl = document.getElementById('sumNet');
             netEl.innerText = formatCurrency(dNet);
             netEl.className = `text-2xl font-bold ${dNet < 0 ? 'text-red-600' : 'text-emerald-600'}`;
-            
             document.getElementById('sumAcc').innerText = formatCurrency(dAcc);
 
-            // Sort Expense
+            // Sorting
             dExpenseList.sort((a, b) => b.value - a.value);
 
             // --- Render Dynamic Charts ---
             
-            // 1. Main Chart (Income vs Expense)
+            // 1. Main Chart
             if(charts.main) charts.main.destroy();
             charts.main = new Chart(document.getElementById('mainChart'), {
                 type: 'bar',
@@ -471,28 +484,74 @@ Hours,0.46,,,,,,,,,,,`;
                 options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // 3. Expense Breakdown
+            // 3. Expense Breakdown (Doughnut)
             if(charts.expense) charts.expense.destroy();
-            const colors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#475569', '#94a3b8'];
+            const colorsExp = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#475569', '#94a3b8'];
             charts.expense = new Chart(document.getElementById('expenseChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: dExpenseList.map(i => `${i.label} ${formatCompactNumber(i.value)}`),
+                    labels: dExpenseList.map(i => `${i.label} (${formatCompactNumber(i.value)})`),
                     datasets: [{
                         data: dExpenseList.map(i => i.value),
-                        backgroundColor: colors.slice(0, dExpenseList.length),
+                        backgroundColor: colorsExp.slice(0, dExpenseList.length),
                         borderWidth: 2
                     }]
                 },
                 options: {
                     maintainAspectRatio: false,
+                    layout: { padding: { left: 10, right: 10, top: 10, bottom: 10 } },
                     plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } }
+                        legend: { 
+                            // ถือเป็นจอมือถือจะเอา Legend ไปไว้ล่างสุด เพื่อไม่ให้บีบกราฟ
+                            position: isMobile ? 'bottom' : 'right', 
+                            labels: { boxWidth: 12, padding: 12, font: { size: 11 } } 
+                        }
                     }
                 }
             });
 
-            // 4. Late Stats
+            // 4. AR Aging (Pie Chart) - NEW
+            if(charts.ar) charts.ar.destroy();
+            const colorsAR = ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6'];
+            charts.ar = new Chart(document.getElementById('arChart'), {
+                type: 'pie',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: dArAgingList.map(i => `${i.label} (${formatCompactNumber(i.value)})`),
+                    datasets: [{
+                        data: dArAgingList.map(i => i.value),
+                        backgroundColor: colorsAR.slice(0, dArAgingList.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 10, right: 10, top: 10, bottom: 10 } },
+                    plugins: {
+                        legend: { 
+                            position: isMobile ? 'bottom' : 'right', 
+                            labels: { boxWidth: 12, padding: 12, font: { size: 11 } } 
+                        },
+                        datalabels: {
+                            display: true,
+                            color: '#ffffff',
+                            font: { weight: 'bold', size: 11 },
+                            formatter: function(value) {
+                                return formatCompactNumber(value);
+                            },
+                            display: function(context) {
+                                // ซ่อนตัวเลขถ้าสัดส่วนมันเล็กเกินไป (น้อยกว่า 4%) ป้องกันตัวเลขทับกัน
+                                const dataset = context.dataset;
+                                const value = dataset.data[context.dataIndex];
+                                const sum = dataset.data.reduce((a, b) => a + b, 0);
+                                return (value / sum) > 0.04; 
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 5. Late Stats
             if(charts.late) charts.late.destroy();
             charts.late = new Chart(document.getElementById('lateChart'), {
                 type: 'bar',
@@ -513,13 +572,14 @@ Hours,0.46,,,,,,,,,,,`;
             });
         }
 
+        // --- Formatting Utils ---
         function formatCurrency(val) {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(val);
         }
 
         function formatCompactNumber(number) {
-            if (Math.abs(number) >= 1000000) return (number / 1000000).toFixed(1) + 'M';
-            if (Math.abs(number) >= 1000) return (number / 1000).toFixed(1) + 'k';
+            if (Math.abs(number) >= 1000000) return (number / 1000000).toFixed(2) + 'M'; // เช่น 1.50M
+            if (Math.abs(number) >= 1000) return (number / 1000).toFixed(1) + 'k';    // เช่น 150.5k
             return number.toFixed(0);
         }
     </script>
