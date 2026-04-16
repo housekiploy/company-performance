@@ -22,3 +22,12 @@ Loss on Exchange Rate,150582.23,155145.99,173226.54,,,,,,,,,
 Late report,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
 Times,24,31,19,,,,,,,,,
 Hours,0.46,1.57,0.45,,,,,,,,,
+,,,,,,,,,,,,
+A/R Aging Breakdown,,,,,,,,,,,,
+Aging Category,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec
+Current,9481203.98,7639060.09,13890436.07,,,,,,,,,
+1 – 30 Days,6212109.18,2815013.77,3385232.31,,,,,,,,,
+31 – 60 Days,6869400,4164063.36,-,,,,,,,,,
+61 – 90 Days,535000,3038800,1328494.88,,,,,,,,,
+Over 90 Days,4922894.84,4881087.8,7919887.8,,,,,,,,,
+Overall,28020608,22538025.02,26524051.06,,,,,,,,,
