@@ -17,14 +17,12 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-800">Financial Dashboard 2026</h1>
                 <p class="text-slate-500">HITEC Food Equipment Co., Ltd. (Updated Analysis)</p>
             </div>
             <div class="flex flex-col sm:flex-row items-center gap-3">
-                <!-- Month Filter -->
                 <select id="monthFilter" class="bg-white border border-slate-300 text-slate-700 font-semibold py-2.5 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer h-full">
                     <option value="1" selected>มกราคม (Jan)</option>
                     <option value="2">กุมภาพันธ์ (Feb)</option>
@@ -41,7 +39,6 @@
                     <option value="all">📊 สรุปทั้งปี 2026 (All Year)</option>
                 </select>
 
-                <!-- Upload Button (For Previewing before pushing to Github) -->
                 <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-blue-200 flex items-center h-full whitespace-nowrap">
                     📂 อัปโหลดไฟล์ใหม่ (CSV)
                     <input type="file" id="csvUpload" class="hidden" accept=".csv">
@@ -49,7 +46,6 @@
             </div>
         </div>
 
-        <!-- Summary Cards -->
         <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="card border-l-4 border-blue-500">
                 <p class="text-sm text-slate-500 uppercase font-bold" id="labelIncome">Total Income</p>
@@ -63,15 +59,13 @@
                 <p class="text-sm text-slate-500 uppercase font-bold" id="labelNet">Net Profit/Loss</p>
                 <h2 id="sumNet" class="text-2xl font-bold text-slate-800">฿0.00</h2>
             </div>
-            <div class="card border-l-4 border-indigo-500">
+            <div class="card border-l-4 border-[#8b5cf6]">
                 <p class="text-sm text-slate-500 uppercase font-bold" id="labelAcc">Accumulated Profit</p>
                 <h2 id="sumAcc" class="text-2xl font-bold text-slate-800">฿0.00</h2>
             </div>
         </div>
 
-        <!-- STATIC SECTION: Historical & Target Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- ประวัติยอดขาย 2003-2025 -->
             <div class="card col-span-1 lg:col-span-2">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">ประวัติยอดขายรายปี (Annual Sales Revenue 2003-2025)</h3>
                 <div class="chart-container" style="height: 350px;">
@@ -79,7 +73,6 @@
                 </div>
             </div>
             
-            <!-- Target vs Actual -->
             <div class="card col-span-1 lg:col-span-2">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">เป้าหมาย vs ยอดขายสะสม ปี 2026 (Target: 265M THB)</h3>
                 <div class="chart-container" style="height: 350px;">
@@ -88,7 +81,6 @@
             </div>
         </div>
 
-        <!-- DYNAMIC SECTION: Charts affected by Filter -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">รายรับเทียบกับรายจ่ายรวม (Income vs Total Expenses)</h3>
@@ -106,7 +98,6 @@
 
             <div class="card">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">สัดส่วนค่าใช้จ่าย (Expense Breakdown - Sorted)</h3>
-                <!-- เพิ่มความสูงเป็น 380px เพื่อกันตัวหนังสือตกหล่น -->
                 <div class="chart-container" style="height: 380px;">
                     <canvas id="expenseChart"></canvas>
                 </div>
@@ -122,7 +113,6 @@
                 </div>
             </div>
             
-            <!-- ย้าย Late Stats มาไว้ข้างล่างสุดให้เต็มกรอบ -->
             <div class="card col-span-1 lg:col-span-2">
                 <h3 class="text-lg font-bold mb-4 text-slate-700">สถิติการมาสาย (Late Report Statistics)</h3>
                 <div class="chart-container" style="height: 320px;">
@@ -169,7 +159,6 @@ Over 90 Days,25000,,,,,,,,,,,`;
         let globalData = []; 
         const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-        // ตั้งค่า Chart.js ทั่วไป (ปิด Datalabels ไว้เป็นค่า Default ค่อยไปเปิดใช้เฉพาะบางกราฟ)
         Chart.defaults.set('plugins.datalabels', { display: false });
 
         window.onload = function() {
@@ -244,7 +233,7 @@ Over 90 Days,25000,,,,,,,,,,,`;
             if(charts.history) charts.history.destroy();
             if(charts.target) charts.target.destroy();
 
-            // A. Historical Chart - เปลี่ยนเป็นสีเขียวสีเดียวตามที่ร้องขอ
+            // A. Historical Chart - เปลี่ยนเป็นสีฟ้าอ่อนตามโลโก้
             const historyLabels = Array.from({length: 23}, (_, i) => 2003 + i);
             const historyData = [0.5, 5.6, 6.3, 6.5, 11, 6, 26, 25, 36, 50, 54, 279, 148, 94, 122, 193, 168, 182, 147, 146, 221, 197, 266];
 
@@ -255,7 +244,7 @@ Over 90 Days,25000,,,,,,,,,,,`;
                     datasets: [{
                         label: 'Annual Sales Revenue (Million Baht)',
                         data: historyData,
-                        backgroundColor: '#10b981', // สีเขียว Emerald-500 สีเดียวล้วน
+                        backgroundColor: '#38bdf8', // สีฟ้าอ่อน Sky Blue
                         borderRadius: 4
                     }]
                 },
@@ -338,7 +327,7 @@ Over 90 Days,25000,,,,,,,,,,,`;
         function updateDynamicDashboard(filterValue) {
             const isAllYear = filterValue === 'all';
             const monthIndex = isAllYear ? 0 : parseInt(filterValue);
-            const isMobile = window.innerWidth < 768; // ตรวจสอบขนาดหน้าจอ
+            const isMobile = window.innerWidth < 768; 
             
             let dIncome = 0, dCogs = 0, dExpense = 0, dNet = 0, dAcc = 0;
             let dLateTimes = 0, dLateHours = 0;
@@ -352,21 +341,18 @@ Over 90 Days,25000,,,,,,,,,,,`;
             let trendAccData = arrAcc;
 
             // --- Logic หาเดือนล่าสุดของ AR Aging ---
-            // ยอดคงค้าง AR ต้องใช้ข้อมูลของเดือนใดเดือนหนึ่ง ไม่นำมาบวกกัน 12 เดือน
             let targetMonthIdxForAR = monthIndex;
             if (isAllYear) {
-                targetMonthIdxForAR = 1; // เริ่มต้นที่มกราคมไว้ก่อน
+                targetMonthIdxForAR = 1;
                 let arHeaderIdx = globalData.findIndex(r => r[0] && r[0].trim() === 'A/R Aging Breakdown');
                 if (arHeaderIdx !== -1) {
                     for(let m = 12; m >= 1; m--) {
                          let hasDataInMonth = false;
-                         // ตรวจสอบข้อมูลในหมวด AR ทุกบรรทัดเพื่อป้องกัน error หากบางบรรทัดว่างหรือไม่มีคอมม่า
                          for(let r = arHeaderIdx + 1; r < globalData.length; r++) {
                              const lbl = globalData[r][0] ? globalData[r][0].trim() : '';
                              if (['Expense Breakdown', 'Late report', 'Overall'].includes(lbl)) break; 
                              
                              const cellVal = globalData[r][m];
-                             // เช็ค undefined ก่อนใช้ toString() ป้องกันระบบล่ม (Crash) ที่ทำให้กราฟ Blank
                              if (cellVal !== undefined && cellVal !== null && cellVal.toString().trim() !== '') {
                                  if (parseVal(cellVal) !== 0) {
                                      hasDataInMonth = true;
@@ -418,9 +404,7 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 if (arSection) {
                     if (label === 'Expense Breakdown' || label === 'Late report' || label === 'Overall') { arSection = false; }
                     else {
-                        // ดักจับทั้งเครื่องหมาย ? และตัวอักขระแปลกประหลาด  (Unicode FFFD) ที่เกิดจาก Excel แปลงโค้ดภาษาผิด
                         const cleanLabel = label.replace(/[\?\uFFFD]/g, '-');
-                        // ใช้ค่าจากเดือนล่าสุดที่มีข้อมูล (targetMonthIdxForAR) แทนการบวกสะสม
                         const val = parseVal(row[targetMonthIdxForAR]);
                         if (val > 0) dArAgingList.push({ label: cleanLabel, value: val });
                     }
@@ -456,7 +440,6 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 document.getElementById('labelNet').innerText = `Net Profit/Loss (2026)`;
             }
 
-            // Update Label for AR Aging ให้แสดงเดือนล่าสุดที่ดึงข้อมูลมา
             const arMonthName = targetMonthIdxForAR > 0 ? monthsShort[targetMonthIdxForAR-1] : '';
             document.getElementById('labelArMonth').innerText = isAllYear && arMonthName ? `(อิงข้อมูลล่าสุดเดือน ${arMonthName})` : '';
 
@@ -519,7 +502,6 @@ Over 90 Days,25000,,,,,,,,,,,`;
                     layout: { padding: { left: 10, right: 10, top: 10, bottom: 10 } },
                     plugins: {
                         legend: { 
-                            // ถือเป็นจอมือถือจะเอา Legend ไปไว้ล่างสุด เพื่อไม่ให้บีบกราฟ
                             position: isMobile ? 'bottom' : 'right', 
                             labels: { boxWidth: 12, padding: 12, font: { size: 11 } } 
                         }
@@ -527,9 +509,8 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 }
             });
 
-            // 4. AR Aging (Pie Chart) - NEW
+            // 4. AR Aging (Pie Chart)
             if(charts.ar) charts.ar.destroy();
-            // เปลี่ยนสีลำดับที่ 2 (1-30 Days) ให้เป็นสีเหลือง (#fde047)
             const colorsAR = ['#10b981', '#fde047', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6'];
             charts.ar = new Chart(document.getElementById('arChart'), {
                 type: 'pie',
@@ -558,7 +539,6 @@ Over 90 Days,25000,,,,,,,,,,,`;
                                 return formatCompactNumber(value);
                             },
                             display: function(context) {
-                                // ซ่อนตัวเลขถ้าสัดส่วนมันเล็กเกินไป (น้อยกว่า 4%) ป้องกันตัวเลขทับกัน
                                 const dataset = context.dataset;
                                 const value = dataset.data[context.dataIndex];
                                 const sum = dataset.data.reduce((a, b) => a + b, 0);
@@ -596,7 +576,6 @@ Over 90 Days,25000,,,,,,,,,,,`;
         }
 
         function formatCompactNumber(number) {
-            // ใช้ parseFloat เพื่อตัดจุดทศนิยมที่เป็น .0 ออกอัตโนมัติ
             if (Math.abs(number) >= 1000000) return parseFloat((number / 1000000).toFixed(2)) + 'M'; 
             if (Math.abs(number) >= 1000) return parseFloat((number / 1000).toFixed(1)) + 'k';    
             return number.toFixed(0);
