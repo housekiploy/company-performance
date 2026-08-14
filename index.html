@@ -211,20 +211,25 @@ Over 90 Days,25000,,,,,,,,,,,`;
             });
         });
 
+        // แก้ไขฟังก์ชันแปลงตัวเลขให้รองรับค่าติดลบ และค่าว่าง
         function parseVal(val) {
-            if (!val) return 0;
-            return parseFloat(val.toString().replace(/,/g, '')) || 0;
+            if (val === undefined || val === null || val.toString().trim() === '') return null; // ส่งกลับเป็น null ถ้าเป็นค่าว่าง
+            const parsed = parseFloat(val.toString().replace(/,/g, ''));
+            return isNaN(parsed) ? 0 : parsed; // ถ้าแปลงไม่ได้จริงๆ ค่อยเป็น 0
         }
 
+        // แก้ไขดึงค่าแถว ให้รักษาค่า null ไว้สำหรับกราฟ
         function getRowValue(label, monthIdx) {
             const row = globalData.find(r => r[0] && r[0].trim() === label);
-            if (!row || !row[monthIdx]) return 0;
-            return parseVal(row[monthIdx]);
+            if (!row || !row[monthIdx]) return 0; // ค่าเดี่ยวๆ ถ้าไม่มีให้โชว์ 0 บนการ์ด
+            const val = parseVal(row[monthIdx]);
+            return val === null ? 0 : val;
         }
 
+        // แก้ไขฟังก์ชันดึงค่าแถวสำหรับกราฟ (ให้คืนค่า null ได้ เพื่อซ่อนเส้นในเดือนที่ไม่มีข้อมูล)
         function getRowArray(label) {
             const row = globalData.find(r => r[0] && r[0].trim() === label);
-            if (!row) return new Array(12).fill(0);
+            if (!row) return new Array(12).fill(null);
             return row.slice(1, 13).map(v => parseVal(v));
         }
 
@@ -405,7 +410,8 @@ Over 90 Days,25000,,,,,,,,,,,`;
                     if (label === 'Expense Breakdown' || label === 'Late report' || label === 'Overall') { arSection = false; }
                     else {
                         const cleanLabel = label.replace(/[\?\uFFFD]/g, '-');
-                        const val = parseVal(row[targetMonthIdxForAR]);
+                        let val = parseVal(row[targetMonthIdxForAR]);
+                        val = val === null ? 0 : val; // กันเหนียวให้ AR Aging ไม่เป็น null
                         if (val > 0) dArAgingList.push({ label: cleanLabel, value: val });
                     }
                 }
@@ -477,11 +483,12 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 data: {
                     labels: trendLabels,
                     datasets: [
-                        { label: 'กำไรสุทธิ', data: trendNetData, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3 },
-                        { label: 'กำไรสะสม', data: trendAccData, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
+                        { label: 'กำไรสุทธิ', data: trendNetData, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, spanGaps: false },
+                        { label: 'กำไรสะสม', data: trendAccData, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3, spanGaps: false }
                     ]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                // ตั้งค่า skipNull เพื่อให้กราฟหยุดลากเส้นหากไม่มีข้อมูลในเดือนนั้นๆ
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { suggestedMin: 0 } }, spanGaps: false }
             });
 
             // 3. Expense Breakdown (Doughnut)
