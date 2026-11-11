@@ -403,7 +403,7 @@ Over 90 Days,25000,,,,,,,,,,,`;
                 dExpense = arrExpense.reduce((a, b) => a + b, 0);
                 dNet = arrNet.reduce((a, b) => a + b, 0);
                 
-                let lastIdx = arrAcc.findLastIndex(v => v !== 0);
+                let lastIdx = arrAcc.findLastIndex(v => v !== null);
                 dAcc = lastIdx >= 0 ? arrAcc[lastIdx] : 0;
 
                 document.getElementById('labelIncome').innerText = `Total Income (2026)`;
